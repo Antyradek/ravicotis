@@ -1,6 +1,6 @@
 #include "ravicotis.hpp"
 
-void Ravicotis::hello()
+void rav::Ravicotis::hello()
 {
-	std::cout << "I'm alive!" << std::endl;
+    std::cout << "I'm alive!" << std::endl;
 }

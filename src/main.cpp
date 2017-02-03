@@ -1,8 +1,8 @@
-#include "ravicotis.hpp" 
+#include "ravicotis.hpp"
 
 int main()
 {
-	Ravicotis rav;
-	rav.hello();
+	rav::Ravicotis app;
+	app.hello();
 	return 0;
 }

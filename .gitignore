@@ -1,2 +1,6 @@
 bin/* 
 ravicotis
+ravicotis.cbp
+ravicotis.layout
+html/
+doxygen/
