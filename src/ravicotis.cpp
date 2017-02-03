@@ -1,6 +1,18 @@
 #include "ravicotis.hpp"
 
-void rav::Ravicotis::hello()
+void rav::Ravicotis::run()
 {
-    std::cout << "I'm alive!" << std::endl;
+    initVulkan();
+    mainLoop();
 }
+
+void rav::Ravicotis::initVulkan()
+{
+
+}
+
+void rav::Ravicotis::mainLoop()
+{
+
+}
+

@@ -1,11 +1,12 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -W
+CXXFLAGS = -std=c++14 -W
 LDFLAGS =
 EXECUTABLE = ravicotis
 SOURCES_DIR = src
 OBJECTS_DIR = bin
 #gives all files in src ending with .cpp
 SOURCES = $(shell ls $(SOURCES_DIR)/*.cpp)
+HEADERS = $(shell ls $(SOURCES_DIR)/*.hpp)
 #changes "src/" for "bin/" and ".cpp" for ".o"
 OBJECTS = $(subst $(SOURCES_DIR)/,$(OBJECTS_DIR)/,$(SOURCES:.cpp=.o))
  

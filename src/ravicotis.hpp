@@ -1,19 +1,22 @@
 #pragma once
 #include<iostream>
+#include<vulkan/vulkan.hpp>
+
 
 namespace rav
 {
 
-/// \brief Main application object
-///
+/// \brief Main application object.
 class Ravicotis
 {
 public:
-    /// \brief Test method to see if it's alive.
-    ///
-    /// \return void
-    ///
-    ///
-    void hello();
+    /// \brief Start application.
+    void run();
+
+    /// \brief Initialize Vulkan.
+    void initVulkan();
+
+    /// \brief Main loop, where everything is made.
+    void mainLoop();
 };
 }
