@@ -44,5 +44,8 @@ private:
 
     /// Main GLFW window
     GLFWwindow* window;
+
+    /// Is running
+    bool isRunning;
 };
 }

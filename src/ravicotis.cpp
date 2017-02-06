@@ -1,13 +1,14 @@
 #include "ravicotis.hpp"
 
-void rav::Ravicotis::run()
+using namespace rav;
+void Ravicotis::run()
 {
     initWindow();
     initVulkan();
     mainLoop();
 }
 
-void rav::Ravicotis::initWindow()
+void Ravicotis::initWindow()
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -17,37 +18,49 @@ void rav::Ravicotis::initWindow()
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, windowTitle.c_str(), nullptr, nullptr);
 }
 
-void rav::Ravicotis::initVulkan()
+void Ravicotis::initVulkan()
 {
 
 }
 
-void rav::Ravicotis::mainLoop()
+void Ravicotis::mainLoop()
 {
+    isRunning = true;
     while (!shouldClose())
     {
         calcEvents();
     }
-    close();
+
+    glfwDestroyWindow(window);
 }
 
-rav::Ravicotis::Ravicotis()
+Ravicotis::Ravicotis()
 {
 
 }
 
-bool rav::Ravicotis::shouldClose()
+bool Ravicotis::shouldClose()
 {
-    return glfwWindowShouldClose(window);
+    return !isRunning;
 }
 
-void rav::Ravicotis::calcEvents()
+void Ravicotis::calcEvents()
 {
     glfwPollEvents();
+
+    if(isRunning)
+    {
+        if(glfwWindowShouldClose(window))
+        {
+            close();
+        }
+    }
 }
 
-void rav::Ravicotis::close()
+void Ravicotis::close()
 {
-    glfwDestroyWindow(window);
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
+    isRunning = false;
+    std::cout << "Closing" << std::endl;
 }
 

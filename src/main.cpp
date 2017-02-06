@@ -1,13 +1,16 @@
 #include "ravicotis.hpp"
 #include "common.hpp"
 #include "logger.hpp"
+#include "event.hpp"
 #include <stdexcept>
 #include <functional>
 #include <csignal>
 
+//call this event to close program
+rav::Event sigtermEvent;
 void sigtermHandler(int sig)
 {
-    //app.close();
+    sigtermEvent.signal();
 }
 
 int main()
@@ -16,7 +19,9 @@ int main()
     logger.info(std::string(NAME).append(" ").append(VERSION));
 
     rav::Ravicotis app;
-    std::signal(SIGTERM, sigtermHandler);
+    std::signal(SIGINT, sigtermHandler);
+    sigtermEvent.connect(std::bind(&rav::Ravicotis::close, app));
+
     try
     {
         app.run();
