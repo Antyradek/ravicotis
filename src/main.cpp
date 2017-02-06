@@ -3,13 +3,20 @@
 #include "logger.hpp"
 #include <stdexcept>
 #include <functional>
+#include <csignal>
+
+void sigtermHandler(int sig)
+{
+    //app.close();
+}
 
 int main()
 {
     rav::Logger logger;
-    logger.info("RAVICOTIS " + VERSION);
+    logger.info(std::string(NAME).append(" ").append(VERSION));
 
     rav::Ravicotis app;
+    std::signal(SIGTERM, sigtermHandler);
     try
     {
         app.run();
