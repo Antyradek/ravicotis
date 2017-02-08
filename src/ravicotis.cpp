@@ -1,11 +1,16 @@
 #include "ravicotis.hpp"
+#include "logger.hpp"
 
 using namespace rav;
 void Ravicotis::run()
 {
+    mainLoop();
+}
+
+void Ravicotis::prepare()
+{
     initWindow();
     initVulkan();
-    mainLoop();
 }
 
 void Ravicotis::initWindow()
@@ -20,7 +25,34 @@ void Ravicotis::initWindow()
 
 void Ravicotis::initVulkan()
 {
+    //Create vulkan instance
+    //App info
+    VkApplicationInfo appInfo = {};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = NAME;
+    appInfo.applicationVersion = VK_MAKE_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    appInfo.pEngineName = "Rav";
+    appInfo.engineVersion = VK_MAKE_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    appInfo.apiVersion = VK_API_VERSION_1_0;
+    //Instance creation info
+    VkInstanceCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
+    //Set GLFW extensions
+    unsigned int glfwExtensionCount = 0;
+    const char** glfwExtensions;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    createInfo.enabledExtensionCount = glfwExtensionCount;
+    createInfo.ppEnabledExtensionNames = glfwExtensions;
+    createInfo.enabledLayerCount = 0;
+    VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+    if(result != VK_SUCCESS) throw std::runtime_error(std::string("Failed to create Vulkan instance: ") + std::to_string(result));
 
+}
+
+void Ravicotis::clean()
+{
+    vkDestroyInstance(instance, nullptr);
 }
 
 void Ravicotis::mainLoop()
@@ -30,13 +62,6 @@ void Ravicotis::mainLoop()
     {
         calcEvents();
     }
-
-    glfwDestroyWindow(window);
-}
-
-Ravicotis::Ravicotis()
-{
-
 }
 
 bool Ravicotis::shouldClose()
@@ -61,6 +86,8 @@ void Ravicotis::close()
 {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
     isRunning = false;
-    std::cout << "Closing" << std::endl;
+    Logger::get().info("Closing application");
+    glfwDestroyWindow(window);
+    clean();
 }
 

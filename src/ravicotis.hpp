@@ -1,6 +1,5 @@
 #pragma once
 #include<iostream>
-#include<vulkan/vulkan.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -15,15 +14,14 @@ namespace rav
 class Ravicotis
 {
 public:
+    /// \brief Prepare application to start.
+    void prepare();
+
     /// \brief Start application.
     void run();
 
-    /// \brief Creates all necessary objects.
-    Ravicotis();
-
     /// \brief Close application.
     void close();
-
 private:
     /// \brief Create GLFW window.
     void initWindow();
@@ -33,6 +31,9 @@ private:
 
     /// \brief Main loop, where everything is made.
     void mainLoop();
+
+    /// \brief Deallocate memory.
+    void clean();
 
     /// \brief Program should close.
     /// \return If user asked program to close.
@@ -47,5 +48,8 @@ private:
 
     /// Is running
     bool isRunning;
+
+    /// Main VK instance
+    VkInstance instance;
 };
 }

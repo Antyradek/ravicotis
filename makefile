@@ -1,7 +1,7 @@
 CXX = g++
 GLFWFLAGS = $(shell pkg-config --static --libs glfw3)
-CXXFLAGS = -std=c++14 -W $(GLFWFLAGS)
-LDFLAGS = $(GLFWFLAGS)
+CXXFLAGS = -std=c++14 -W
+LDFLAGS = $(GLFWFLAGS) -lvulkan
 EXECUTABLE = ravicotis
 SOURCES_DIR = src
 OBJECTS_DIR = bin

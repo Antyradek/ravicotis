@@ -5,6 +5,7 @@
 #include<utility>
 #include<memory>
 #define GREEN_COLOR "\033[32m"
+#define RED_COLOR "\033[31m"
 #define DEFAULT_COLOR "\033[39m"
 
 namespace rav
@@ -12,6 +13,30 @@ namespace rav
 /// \brief Logs info and errors in colours to STDOUT or given file.
 class Logger
 {
+
+public:
+    /// \brief Log standard text.
+    /// \param text  Text to write.
+    void info(const std::string& text) const;
+
+    /// \brief Log success in green colour.
+    /// \param text Text to log.
+    void success(const std::string& text) const;
+
+    /// \brief Log error to error pipe, in red.
+    /// \param text Text of error.
+    void error(const std::string& text) const;
+
+    /// \brief Get instance of logger.
+    /// \return Instance of global logger.
+    static Logger& get();
+
+    /// \brief Copy constructor disabled in sigleton.
+    Logger(const Logger& logger) = delete;
+
+    /// \brief Operator disabled in singleton.
+    void operator=(const Logger& logger)  = delete;
+
 private:
     std::ostream* textOut;
     std::ostream* errOut;
@@ -33,23 +58,5 @@ private:
 
     virtual ~Logger();
 
-public:
-    /// \brief Log standard text.
-    /// \param text  Text to write.
-    void info(const std::string& text) const;
-
-    /// \brief Log success in green colour.
-    /// \param text Text to log
-    void success(const std::string& text) const;
-
-    /// \brief Get instance of logger.
-    /// \return Instance of global logger.
-    static Logger& get();
-
-    /// \brief Copy constructor disabled in sigleton.
-    Logger(const Logger& logger) = delete;
-
-    /// \brief Operator disabled in singleton.
-    void operator=(const Logger& logger)  = delete;
 };
 }
