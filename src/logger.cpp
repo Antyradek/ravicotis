@@ -45,3 +45,9 @@ std::string Logger::setColor(const std::string& pre, const std::string& text, co
         return text;
     }
 }
+
+Logger& Logger::get()
+{
+    static Logger logger;
+    return logger;
+}

@@ -15,8 +15,7 @@ void sigtermHandler(int sig)
 
 int main()
 {
-    rav::Logger logger;
-    logger.info(std::string(NAME).append(" ").append(VERSION));
+    rav::Logger::get().info(std::string(NAME).append(" ").append(VERSION));
 
     rav::Ravicotis app;
     std::signal(SIGINT, sigtermHandler);

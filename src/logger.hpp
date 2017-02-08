@@ -23,7 +23,6 @@ private:
     /// \param post Third part.
     /// \return Concatenated string, or only the middle one.
     std::string setColor(const std::string& pre, const std::string& text, const std::string& post) const;
-public:
     /// \brief Log in colour to STDOUT and STDERR.
     Logger();
 
@@ -34,6 +33,7 @@ public:
 
     virtual ~Logger();
 
+public:
     /// \brief Log standard text.
     /// \param text  Text to write.
     void info(const std::string& text) const;
@@ -41,5 +41,15 @@ public:
     /// \brief Log success in green colour.
     /// \param text Text to log
     void success(const std::string& text) const;
+
+    /// \brief Get instance of logger.
+    /// \return Instance of global logger.
+    static Logger& get();
+
+    /// \brief Copy constructor disabled in sigleton.
+    Logger(const Logger& logger) = delete;
+
+    /// \brief Operator disabled in singleton.
+    void operator=(const Logger& logger)  = delete;
 };
 }
