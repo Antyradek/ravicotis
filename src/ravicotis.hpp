@@ -1,5 +1,6 @@
 #pragma once
 #include<iostream>
+#include<mutex>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -20,7 +21,7 @@ public:
     /// \brief Start application.
     void run();
 
-    /// \brief Close application.
+    /// \brief Close application, can be called by other thread (such as signal SIGINT).
     void close();
 private:
     /// \brief Create GLFW window.
@@ -43,13 +44,19 @@ private:
     void calcEvents();
 
 
-    /// Main GLFW window
+    /// Main GLFW window.
     GLFWwindow* window;
 
-    /// Is running
+    /// Is everything running?
     bool isRunning;
 
-    /// Main VK instance
+    /// Closed with close().
+    bool isClosedExternally;
+
+    /// Main VK instance.
     VkInstance instance;
+
+    /// Mutex to allow asynchronous call to close app.
+    std::mutex closeMutex;
 };
 }

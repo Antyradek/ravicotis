@@ -25,6 +25,18 @@ void Ravicotis::initWindow()
 
 void Ravicotis::initVulkan()
 {
+    //List extensions
+    unsigned int extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    VkExtensionProperties extensions[extensionCount];
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions);
+    std::string extInfo = "Extensions:";
+    for(unsigned int i = 0; i < extensionCount; i++)
+    {
+        extInfo.append("\n\t").append(extensions[i].extensionName);
+    }
+    Logger::get().debug(extInfo);
+
     //Create vulkan instance
     //App info
     VkApplicationInfo appInfo = {};
@@ -52,16 +64,21 @@ void Ravicotis::initVulkan()
 
 void Ravicotis::clean()
 {
+    Logger::get().info("Closing application");
     vkDestroyInstance(instance, nullptr);
+    glfwDestroyWindow(window);
 }
 
 void Ravicotis::mainLoop()
 {
     isRunning = true;
+    isClosedExternally = false;
     while (!shouldClose())
     {
         calcEvents();
     }
+
+    clean();
 }
 
 bool Ravicotis::shouldClose()
@@ -73,21 +90,22 @@ void Ravicotis::calcEvents()
 {
     glfwPollEvents();
 
+    //mutex in case close() is called
+    closeMutex.lock();
     if(isRunning)
     {
-        if(glfwWindowShouldClose(window))
+        if(glfwWindowShouldClose(window) || isClosedExternally)
         {
-            close();
+            isRunning = false;
         }
     }
+    closeMutex.unlock();
 }
 
 void Ravicotis::close()
 {
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
-    isRunning = false;
-    Logger::get().info("Closing application");
-    glfwDestroyWindow(window);
-    clean();
+    closeMutex.lock();
+    isClosedExternally = true;
+    closeMutex.unlock();
 }
 

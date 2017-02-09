@@ -19,7 +19,7 @@ int main()
 
     rav::Ravicotis app;
     std::signal(SIGINT, sigtermHandler);
-    sigtermEvent.connect(std::bind(&rav::Ravicotis::close, app));
+    sigtermEvent.connect(std::bind(&rav::Ravicotis::close, &app));
 
     try
     {

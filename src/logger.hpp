@@ -6,6 +6,8 @@
 #include<memory>
 #define GREEN_COLOR "\033[32m"
 #define RED_COLOR "\033[31m"
+#define BLUE_COLOR "\033[34m"
+#define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[39m"
 
 namespace rav
@@ -26,6 +28,10 @@ public:
     /// \brief Log error to error pipe, in red.
     /// \param text Text of error.
     void error(const std::string& text) const;
+
+    /// \brief Log nonimportant debug info in cyan.
+    /// \param text Text to log.
+    void debug(const std::string& text) const;
 
     /// \brief Get instance of logger.
     /// \return Instance of global logger.
