@@ -24,6 +24,9 @@ public:
     /// \brief Close application, can be called by other thread (such as signal SIGINT).
     void close();
 private:
+    /// \brief Init validation layers.
+    void initValidationLayers();
+
     /// \brief Create GLFW window.
     void initWindow();
 
@@ -58,5 +61,8 @@ private:
 
     /// Mutex to allow asynchronous call to close app.
     std::mutex closeMutex;
+
+    /// Are validation layers enabled?
+    bool enableValidationLayers;
 };
 }

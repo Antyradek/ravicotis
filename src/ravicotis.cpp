@@ -9,8 +9,40 @@ void Ravicotis::run()
 
 void Ravicotis::prepare()
 {
+    initValidationLayers();
     initWindow();
     initVulkan();
+}
+
+void Ravicotis::initValidationLayers()
+{
+    enableValidationLayers = false;
+    #ifdef DEBUG
+        enableValidationLayers = true;
+        //take alailable layers
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        VkLayerProperties availableLayers[layerCount];
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
+        //check if the specified layer exists
+        bool layerExists = false;
+        for (uint32_t i = 0; i < layerCount; i++)
+        {
+            if(std::string("VK_LAYER_LUNARG_standard_validation").compare(availableLayers[i].layerName) == 0)
+            {
+                layerExists = true;
+                break;
+            }
+        }
+        if(!layerExists)
+        {
+            Logger::get().error("No VK_LAYER_LUNARG_standard_validation layer found!");
+        }
+        else
+        {
+            Logger::get().success("All necessary validation layers exist.");
+        }
+    #endif // DEBUG
 }
 
 void Ravicotis::initWindow()
