@@ -1,6 +1,25 @@
 #include "ravicotis.hpp"
 #include "logger.hpp"
 
+#ifdef DEBUG
+///Function for validation layer reporting
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL validationLayerCallback(
+    VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT objType,
+    uint64_t obj,
+    size_t location,
+    int32_t code,
+    const char* layerPrefix,
+    const char* msg,
+    void* userData)
+{
+    rav::Logger::get().warning(msg);
+
+    return VK_FALSE;
+}
+#endif // DEBUG
+
 using namespace rav;
 void Ravicotis::run()
 {
@@ -16,9 +35,7 @@ void Ravicotis::prepare()
 
 void Ravicotis::initValidationLayers()
 {
-    enableValidationLayers = false;
     #ifdef DEBUG
-        enableValidationLayers = true;
         //take alailable layers
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -28,7 +45,7 @@ void Ravicotis::initValidationLayers()
         bool layerExists = false;
         for (uint32_t i = 0; i < layerCount; i++)
         {
-            if(std::string("VK_LAYER_LUNARG_standard_validation").compare(availableLayers[i].layerName) == 0)
+            if(std::string(VALIDATION_LAYER_NAME).compare(availableLayers[i].layerName) == 0)
             {
                 layerExists = true;
                 break;
@@ -36,7 +53,7 @@ void Ravicotis::initValidationLayers()
         }
         if(!layerExists)
         {
-            Logger::get().error("No VK_LAYER_LUNARG_standard_validation layer found!");
+            throw std::runtime_error(std::string(VALIDATION_LAYER_NAME).append(" not found!"));
         }
         else
         {
@@ -57,18 +74,6 @@ void Ravicotis::initWindow()
 
 void Ravicotis::initVulkan()
 {
-    //List extensions
-    unsigned int extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-    VkExtensionProperties extensions[extensionCount];
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions);
-    std::string extInfo = "Extensions:";
-    for(unsigned int i = 0; i < extensionCount; i++)
-    {
-        extInfo.append("\n\t").append(extensions[i].extensionName);
-    }
-    Logger::get().debug(extInfo);
-
     //Create vulkan instance
     //App info
     VkApplicationInfo appInfo = {};
@@ -82,15 +87,52 @@ void Ravicotis::initVulkan()
     VkInstanceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
+    createInfo.enabledLayerCount = 0;
+    #ifdef DEBUG
+        //Add validation layers to creation info
+        createInfo.enabledLayerCount = VALIDATION_LAYER_COUNT;
+        const char* layerNames[1];
+        layerNames[0] = VALIDATION_LAYER_NAME;
+        createInfo.ppEnabledLayerNames = layerNames;
+    #endif // DEBUG
     //Set GLFW extensions
     unsigned int glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     createInfo.enabledExtensionCount = glfwExtensionCount;
     createInfo.ppEnabledExtensionNames = glfwExtensions;
-    createInfo.enabledLayerCount = 0;
+    #ifdef DEBUG
+        //Add reporting extension to creation info (add one extension to glfw extensions list)
+        unsigned int extensionCount = glfwExtensionCount + 1;
+        const char* extensions[extensionCount];
+        for (unsigned int i = 0; i < glfwExtensionCount; i++)
+        {
+            extensions[i] = glfwExtensions[i];
+        }
+        extensions[extensionCount - 1] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+        createInfo.enabledExtensionCount = extensionCount;
+        createInfo.ppEnabledExtensionNames = extensions;
+    #endif // DEBUG
     VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
     if(result != VK_SUCCESS) throw std::runtime_error(std::string("Failed to create Vulkan instance: ") + std::to_string(result));
+
+    #ifdef DEBUG
+        //Set callback for reporting
+        VkDebugReportCallbackEXT callback;
+        VkDebugReportCallbackCreateInfoEXT callbackCreateInfo = {};
+        callbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+        callbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+        callbackCreateInfo.pfnCallback = validationLayerCallback;
+        auto func = (PFN_vkCreateDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+        if(func == nullptr)
+        {
+            Logger::get().error("Validation layer callback setting function address couldn't be found.");
+        }
+        if(func(instance, &callbackCreateInfo, nullptr, &callback) != VK_SUCCESS)
+        {
+            Logger::get().error("Could not set callback function.");
+        }
+    #endif // DEBUG
 
 }
 

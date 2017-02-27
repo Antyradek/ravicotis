@@ -6,8 +6,9 @@
 #include <functional>
 #include <csignal>
 
-//call this event to close program
+///Call this event to close program
 rav::Event sigtermEvent;
+///Handler for signal
 void sigtermHandler(int sig)
 {
     sigtermEvent.signal();

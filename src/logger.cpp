@@ -39,6 +39,11 @@ void Logger::error(const std::string& text) const
     *errOut << setColor(RED_COLOR, text, DEFAULT_COLOR) << std::endl;
 }
 
+void Logger::warning(const std::string& text) const
+{
+    *textOut << setColor(YELLOW_COLOR, text, DEFAULT_COLOR) << std::endl;
+}
+
 void Logger::debug(const std::string& text) const
 {
     *textOut << setColor(CYAN_COLOR, text, DEFAULT_COLOR) << std::endl;

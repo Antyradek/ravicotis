@@ -61,8 +61,5 @@ private:
 
     /// Mutex to allow asynchronous call to close app.
     std::mutex closeMutex;
-
-    /// Are validation layers enabled?
-    bool enableValidationLayers;
 };
 }
