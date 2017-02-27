@@ -61,5 +61,10 @@ private:
 
     /// Mutex to allow asynchronous call to close app.
     std::mutex closeMutex;
+
+    #ifdef DEBUG
+        /// Callback struct for validation layer reporting
+        VkDebugReportCallbackEXT reportCallback;
+    #endif // DEBUG
 };
 }

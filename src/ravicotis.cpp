@@ -118,7 +118,6 @@ void Ravicotis::initVulkan()
 
     #ifdef DEBUG
         //Set callback for reporting
-        VkDebugReportCallbackEXT callback;
         VkDebugReportCallbackCreateInfoEXT callbackCreateInfo = {};
         callbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
         callbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
@@ -128,17 +127,29 @@ void Ravicotis::initVulkan()
         {
             Logger::get().error("Validation layer callback setting function address couldn't be found.");
         }
-        if(func(instance, &callbackCreateInfo, nullptr, &callback) != VK_SUCCESS)
+        if(func(instance, &callbackCreateInfo, nullptr, &reportCallback) != VK_SUCCESS)
         {
             Logger::get().error("Could not set callback function.");
         }
+        else
+        {
+            Logger::get().success("Successfully set callback function.");
+        }
     #endif // DEBUG
-
 }
 
 void Ravicotis::clean()
 {
     Logger::get().info("Closing application");
+    #ifdef DEBUG
+        //Unset reporting callback
+        auto func = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
+        if(func == nullptr)
+        {
+            Logger::get().error("Validation layer callback unsetting function address couldn't be found.");
+        }
+        func(instance, reportCallback, nullptr);
+    #endif // DEBUG
     vkDestroyInstance(instance, nullptr);
     glfwDestroyWindow(window);
 }

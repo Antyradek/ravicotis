@@ -3,7 +3,7 @@
 #define NAME "Ravicotis"
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 1
+#define VERSION_PATCH 2
 
 #define VERSION std::to_string(VERSION_MAJOR)).append(".").append(std::to_string(VERSION_MINOR)).append(".").append(std::to_string(VERSION_PATCH)
 
