@@ -33,6 +33,9 @@ private:
     /// \brief Initialize Vulkan.
     void initVulkan();
 
+    /// \brief Pick first discrete GPU, or internal if no others.
+    void pickGPU();
+
     /// \brief Main loop, where everything is made.
     void mainLoop();
 
@@ -61,6 +64,9 @@ private:
 
     /// Mutex to allow asynchronous call to close app.
     std::mutex closeMutex;
+
+    /// Physical device
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
     #ifdef DEBUG
         /// Callback struct for validation layer reporting

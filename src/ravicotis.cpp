@@ -31,35 +31,36 @@ void Ravicotis::prepare()
     initValidationLayers();
     initWindow();
     initVulkan();
+    pickGPU();
 }
 
 void Ravicotis::initValidationLayers()
 {
-    #ifdef DEBUG
-        //take alailable layers
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-        VkLayerProperties availableLayers[layerCount];
-        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
-        //check if the specified layer exists
-        bool layerExists = false;
-        for (uint32_t i = 0; i < layerCount; i++)
+#ifdef DEBUG
+    //take alailable layers
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+    VkLayerProperties availableLayers[layerCount];
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
+    //check if the specified layer exists
+    bool layerExists = false;
+    for (uint32_t i = 0; i < layerCount; i++)
+    {
+        if(std::string(VALIDATION_LAYER_NAME).compare(availableLayers[i].layerName) == 0)
         {
-            if(std::string(VALIDATION_LAYER_NAME).compare(availableLayers[i].layerName) == 0)
-            {
-                layerExists = true;
-                break;
-            }
+            layerExists = true;
+            break;
         }
-        if(!layerExists)
-        {
-            throw std::runtime_error(std::string(VALIDATION_LAYER_NAME).append(" not found!"));
-        }
-        else
-        {
-            Logger::get().success("All necessary validation layers exist.");
-        }
-    #endif // DEBUG
+    }
+    if(!layerExists)
+    {
+        throw std::runtime_error(std::string(VALIDATION_LAYER_NAME).append(" not found!"));
+    }
+    else
+    {
+        Logger::get().success("All necessary validation layers exist.");
+    }
+#endif // DEBUG
 }
 
 void Ravicotis::initWindow()
@@ -88,68 +89,108 @@ void Ravicotis::initVulkan()
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
     createInfo.enabledLayerCount = 0;
-    #ifdef DEBUG
-        //Add validation layers to creation info
-        createInfo.enabledLayerCount = VALIDATION_LAYER_COUNT;
-        const char* layerNames[1];
-        layerNames[0] = VALIDATION_LAYER_NAME;
-        createInfo.ppEnabledLayerNames = layerNames;
-    #endif // DEBUG
+#ifdef DEBUG
+    //Add validation layers to creation info
+    createInfo.enabledLayerCount = VALIDATION_LAYER_COUNT;
+    const char* layerNames[1];
+    layerNames[0] = VALIDATION_LAYER_NAME;
+    createInfo.ppEnabledLayerNames = layerNames;
+#endif // DEBUG
     //Set GLFW extensions
     unsigned int glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     createInfo.enabledExtensionCount = glfwExtensionCount;
     createInfo.ppEnabledExtensionNames = glfwExtensions;
-    #ifdef DEBUG
-        //Add reporting extension to creation info (add one extension to glfw extensions list)
-        unsigned int extensionCount = glfwExtensionCount + 1;
-        const char* extensions[extensionCount];
-        for (unsigned int i = 0; i < glfwExtensionCount; i++)
-        {
-            extensions[i] = glfwExtensions[i];
-        }
-        extensions[extensionCount - 1] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-        createInfo.enabledExtensionCount = extensionCount;
-        createInfo.ppEnabledExtensionNames = extensions;
-    #endif // DEBUG
+#ifdef DEBUG
+    //Add reporting extension to creation info (add one extension to glfw extensions list)
+    unsigned int extensionCount = glfwExtensionCount + 1;
+    const char* extensions[extensionCount];
+    for (unsigned int i = 0; i < glfwExtensionCount; i++)
+    {
+        extensions[i] = glfwExtensions[i];
+    }
+    extensions[extensionCount - 1] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+    createInfo.enabledExtensionCount = extensionCount;
+    createInfo.ppEnabledExtensionNames = extensions;
+#endif // DEBUG
     VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
     if(result != VK_SUCCESS) throw std::runtime_error(std::string("Failed to create Vulkan instance: ") + std::to_string(result));
 
+#ifdef DEBUG
+    //Set callback for reporting
+    VkDebugReportCallbackCreateInfoEXT callbackCreateInfo = {};
+    callbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+    callbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+    callbackCreateInfo.pfnCallback = validationLayerCallback;
+    auto func = (PFN_vkCreateDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+    if(func == nullptr)
+    {
+        Logger::get().error("Validation layer callback setting function address couldn't be found.");
+    }
+    if(func(instance, &callbackCreateInfo, nullptr, &reportCallback) != VK_SUCCESS)
+    {
+        Logger::get().error("Could not set callback function.");
+    }
+    else
+    {
+        Logger::get().success("Successfully set callback function.");
+    }
+#endif // DEBUG
+}
+
+void Ravicotis::pickGPU()
+{
+    //Get GPU count
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+    if (deviceCount == 0)
+    {
+        throw std::runtime_error("No GPUs with Vulkan support!");
+    }
+    VkPhysicalDevice devices[deviceCount];
+    vkEnumeratePhysicalDevices(instance, &deviceCount, devices);
     #ifdef DEBUG
-        //Set callback for reporting
-        VkDebugReportCallbackCreateInfoEXT callbackCreateInfo = {};
-        callbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        callbackCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
-        callbackCreateInfo.pfnCallback = validationLayerCallback;
-        auto func = (PFN_vkCreateDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
-        if(func == nullptr)
+        std::string outText = "Found devices: \n";
+        for(uint32_t i = 0; i < deviceCount; ++i)
         {
-            Logger::get().error("Validation layer callback setting function address couldn't be found.");
+            VkPhysicalDeviceProperties deviceProperties;
+            vkGetPhysicalDeviceProperties(devices[i], &deviceProperties);
+            outText.append("\t").append(deviceProperties.deviceName).append("\n");
         }
-        if(func(instance, &callbackCreateInfo, nullptr, &reportCallback) != VK_SUCCESS)
-        {
-            Logger::get().error("Could not set callback function.");
-        }
-        else
-        {
-            Logger::get().success("Successfully set callback function.");
-        }
+        Logger::get().debug(outText);
     #endif // DEBUG
+
+    //Select strongest GPU
+    for(uint32_t i = 0; i < deviceCount; ++i)
+    {
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(devices[i], &deviceProperties);
+        //TODO check device features needed in program
+        if(deviceProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        {
+            physicalDevice = devices[i];
+            Logger::get().success(std::string("Selected device: ").append(deviceProperties.deviceName));
+            return;
+        }
+    }
+
+    //We didn't find discrete, so pick first
+    physicalDevice = devices[0];
 }
 
 void Ravicotis::clean()
 {
     Logger::get().info("Closing application");
-    #ifdef DEBUG
-        //Unset reporting callback
-        auto func = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
-        if(func == nullptr)
-        {
-            Logger::get().error("Validation layer callback unsetting function address couldn't be found.");
-        }
-        func(instance, reportCallback, nullptr);
-    #endif // DEBUG
+#ifdef DEBUG
+    //Unset reporting callback
+    auto func = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
+    if(func == nullptr)
+    {
+        Logger::get().error("Validation layer callback unsetting function address couldn't be found.");
+    }
+    func(instance, reportCallback, nullptr);
+#endif // DEBUG
     vkDestroyInstance(instance, nullptr);
     glfwDestroyWindow(window);
 }
