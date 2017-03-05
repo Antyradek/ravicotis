@@ -161,22 +161,39 @@ void Ravicotis::pickGPU()
         Logger::get().debug(outText);
     #endif // DEBUG
 
-    //Select strongest GPU
+    //Select appriopriate GPU
     for(uint32_t i = 0; i < deviceCount; ++i)
     {
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(devices[i], &deviceProperties);
-        //TODO check device features needed in program
-        if(deviceProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        //If has no queue families wth necessary values, seek next
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queueFamilyCount, nullptr);
+        VkQueueFamilyProperties queueFamilies[queueFamilyCount];
+        vkGetPhysicalDeviceQueueFamilyProperties(devices[i], &queueFamilyCount, queueFamilies);
+        bool hasFamily = false;
+        for(uint32_t j = 0; j < queueFamilyCount; ++j)
         {
-            physicalDevice = devices[i];
-            Logger::get().success(std::string("Selected device: ").append(deviceProperties.deviceName));
-            return;
+            if(queueFamilies[j].queueCount <= 0)
+            {
+                continue;
+            }
+            if(queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT == 0)
+            {
+                continue;
+            }
+            hasFamily = true;
         }
+        if(!hasFamily)
+        {
+            continue;
+        }
+        physicalDevice = devices[i];
+        Logger::get().success(std::string("Selected device: ").append(deviceProperties.deviceName));
+        return;
     }
 
-    //We didn't find discrete, so pick first
-    physicalDevice = devices[0];
+    throw std::runtime_error("No GPU with necessary features found!");
 }
 
 void Ravicotis::clean()
