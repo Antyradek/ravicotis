@@ -32,6 +32,7 @@ void Ravicotis::prepare()
     initWindow();
     initVulkan();
     pickGPU();
+    createDevice();
 }
 
 void Ravicotis::initValidationLayers()
@@ -150,16 +151,16 @@ void Ravicotis::pickGPU()
     }
     VkPhysicalDevice devices[deviceCount];
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices);
-    #ifdef DEBUG
-        std::string outText = "Found devices: \n";
-        for(uint32_t i = 0; i < deviceCount; ++i)
-        {
-            VkPhysicalDeviceProperties deviceProperties;
-            vkGetPhysicalDeviceProperties(devices[i], &deviceProperties);
-            outText.append("\t").append(deviceProperties.deviceName).append("\n");
-        }
-        Logger::get().debug(outText);
-    #endif // DEBUG
+#ifdef DEBUG
+    std::string outText = "Found devices: \n";
+    for(uint32_t i = 0; i < deviceCount; ++i)
+    {
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(devices[i], &deviceProperties);
+        outText.append("\t").append(deviceProperties.deviceName).append("\n");
+    }
+    Logger::get().debug(outText);
+#endif // DEBUG
 
     //Select appriopriate GPU
     for(uint32_t i = 0; i < deviceCount; ++i)
@@ -196,6 +197,61 @@ void Ravicotis::pickGPU()
     throw std::runtime_error("No GPU with necessary features found!");
 }
 
+void Ravicotis::createDevice()
+{
+    //Get queue families for GPU and select first appriopriate family
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+    VkQueueFamilyProperties queueFamilies[queueFamilyCount];
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies);
+    uint32_t wantedQueueFamilyIndex = 0;
+    for(uint32_t j = 0; j < queueFamilyCount; ++j)
+    {
+        if(queueFamilies[j].queueCount <= 0)
+        {
+            continue;
+        }
+        if(queueFamilies[j].queueFlags & VK_QUEUE_GRAPHICS_BIT == 0)
+        {
+            continue;
+        }
+        wantedQueueFamilyIndex = j;
+        break;
+    }
+    VkDeviceQueueCreateInfo queueCreateInfo = {};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = wantedQueueFamilyIndex;
+    queueCreateInfo.queueCount = 1;
+    float queuePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+
+    VkDeviceCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.enabledExtensionCount = 0;
+    createInfo.enabledLayerCount = 0;
+#ifdef DEBUG
+    createInfo.enabledLayerCount = VALIDATION_LAYER_COUNT;
+    const char* layerNames[1];
+    layerNames[0] = VALIDATION_LAYER_NAME;
+    createInfo.ppEnabledLayerNames = layerNames;
+#endif // DEBUG
+
+    VkResult result =  vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
+    if(result != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create logical device");
+    }
+
+    vkGetDeviceQueue(device, wantedQueueFamilyIndex, 0, &graphicsQueue);
+
+    Logger::get().success("Created logical device");
+}
+
 void Ravicotis::clean()
 {
     Logger::get().info("Closing application");
@@ -208,6 +264,7 @@ void Ravicotis::clean()
     }
     func(instance, reportCallback, nullptr);
 #endif // DEBUG
+    vkDestroyDevice(device, nullptr);
     vkDestroyInstance(instance, nullptr);
     glfwDestroyWindow(window);
 }

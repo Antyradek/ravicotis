@@ -36,6 +36,9 @@ private:
     /// \brief Pick first discrete GPU, or internal if no others.
     void pickGPU();
 
+    /// \brief Create virtual device.
+    void createDevice();
+
     /// \brief Main loop, where everything is made.
     void mainLoop();
 
@@ -67,6 +70,12 @@ private:
 
     /// Physical device
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
+    /// Virtual device
+    VkDevice device;
+
+    /// Graphics queue
+    VkQueue graphicsQueue;
 
     #ifdef DEBUG
         /// Callback struct for validation layer reporting
